@@ -1,0 +1,22 @@
+# Environments
+venv/
+env/
+.env/
+
+# Python caching and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+.ipynb
+
+# Models and large files
+*.pkl
+*.model
+
+# OS generated files
+.DS_Store
+Thumbs.db
