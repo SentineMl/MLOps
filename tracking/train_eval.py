@@ -6,17 +6,13 @@ from sklearn.metrics import classification_report, average_precision_score, roc_
 import joblib
 import mlflow
 import mlflow.sklearn
-import os
 
-from tracking.feature_eng import process_features
+from config import *
+from utils import *
+from feature_eng import process_features
 
-# Configure MLflow pointing to local Docker setup
-mlflow.set_tracking_uri("http://localhost:5000")
-os.environ["AWS_ACCESS_KEY_ID"] = "s3admin"
-os.environ["AWS_SECRET_ACCESS_KEY"] = "s3admin"
-os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-os.environ["MLFLOW_S3_ENDPOINT_URL"] = "http://localhost:9000"
-mlflow.set_experiment("Fraud_Detection_Experiment")
+# Simply setup MLflow here!
+setup_mlflow(EXPERIMENT_NAME)
 
 def main():
     print("Loading data...")
@@ -71,7 +67,7 @@ def main():
         }
         mlflow.log_params(params)
         
-        model = IsolationForest(**params)
+        model=IsolationForest(**params)
         model.fit(X_train_normal)
         
         print("Evaluating model performance on Validation Set...")
@@ -112,9 +108,12 @@ def main():
             print(f"ROC-AUC: {roc_auc:.4f}")
             
             # Log metrics to MLflow
-            mlflow.log_metric("pr_auc", float(pr_auc))
-            mlflow.log_metric("roc_auc", float(roc_auc))
-            mlflow.log_metric("f1_score", float(best_f1))
+            my_result = {
+                "pr_auc": float(pr_auc),
+                "roc_auc": float(roc_auc),
+                "f1_score": float(best_f1)
+            }
+            log_metrics(mlflow, my_result)
         
         print("\nClassification Report:")
         print(classification_report(y_val, y_pred, target_names=['Normal', 'Fraud']))
@@ -129,12 +128,5 @@ def main():
         
         # Log the model to MLflow (uploads to your local S3 artifact store)
         print("Uploading model to MLflow...")
-        mlflow.sklearn.log_model(
-            sk_model=model,
-            artifact_path="fraud_isolation_forest_model",
-            registered_model_name="FraudDetectionModel_Champion"
-        )
-        print("MLflow logging complete!")
-
-if __name__ == "__main__":
+        log_model(mlflow, model, "FraudDetectionModel_Champion", artifact_path="fraud_isolation_forest_model")
     main()
