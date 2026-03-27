@@ -4,7 +4,7 @@ artifacts/
 # Environments
 venv/
 env/
-.env/
+.env
 
 # Python caching and compiled files
 __pycache__/
