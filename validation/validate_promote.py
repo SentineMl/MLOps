@@ -27,7 +27,7 @@ def main():
 
     _, run = get_run_for_version(client, MODEL_NAME, version)
 
-    f1 = get_metric(run, "f1")
+    f1 = get_metric(run, "f1_score")
 
     print(f"Candidate v{version} → f1={f1}")
 
