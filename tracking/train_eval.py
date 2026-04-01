@@ -6,6 +6,8 @@ from sklearn.metrics import classification_report, average_precision_score, roc_
 import joblib
 import mlflow
 import mlflow.sklearn
+from datetime import datetime, timedelta
+from sqlalchemy import create_engine, text
 
 from config import *
 from utils import *
@@ -14,14 +16,60 @@ from feature_eng import process_features
 # Simply setup MLflow here!
 setup_mlflow(EXPERIMENT_NAME)
 
-def main():
-    print("Loading data...")
-    # Load portion of the data (e.g. 90%)
-    # You can adjust nrows to load the entire dataset and sample 90%
-    data_path = r"..\data\transactions.csv"
+def load_data_from_db(days_back=30):
+    """
+    Load transaction data from PostgreSQL for the last N days.
+    Uses database credentials from config.
     
-    # Load dataset
-    df = pd.read_csv(data_path)
+    Args:
+        days_back: Number of days to load (default: 30 for last month)
+    
+    Returns:
+        pandas DataFrame with transaction data
+    """
+    try:
+        # Create connection string from config
+        connection_string = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        engine = create_engine(connection_string)
+        
+        # Calculate date range (last 30 days)
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days_back)
+        
+        print(f"Querying data from {start_date.date()} to {end_date.date()}")
+        
+        # Query transactions from the last month
+        # Adjust the query based on your actual table schema
+        query = text(f"""
+            SELECT * 
+            FROM transactions 
+            WHERE created_at >= :start_date 
+            AND created_at <= :end_date
+            ORDER BY created_at DESC
+        """)
+        
+        with engine.connect() as connection:
+            df = pd.read_sql(query, connection, params={
+                'start_date': start_date,
+                'end_date': end_date
+            })
+        
+        print(f"✅ Loaded {len(df)} transactions from database")
+        engine.dispose()
+        
+        return df
+    
+    except Exception as e:
+        print(f"❌ Error loading from database: {e}")
+        print("Falling back to CSV file...")
+        return pd.read_csv(r"..\data\transactions.csv")
+
+def main():
+    print("Loading data from database...")
+    
+    # Load data from PostgreSQL (last 30 days)
+    # Adjust days_back if you want more/less data
+    df = load_data_from_db(days_back=30)
     
     # Sample 90% of the data
     df_sample = df.sample(frac=0.9, random_state=42).reset_index(drop=True)
