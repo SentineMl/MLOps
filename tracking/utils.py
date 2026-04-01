@@ -8,8 +8,8 @@ def setup_mlflow(experiment_name):
     os.environ["AWS_SECRET_ACCESS_KEY"] = AWS_SECRET_ACCESS_KEY
     os.environ["AWS_DEFAULT_REGION"] = AWS_DEFAULT_REGION
     os.environ["MLFLOW_S3_ENDPOINT_URL"] = MLFLOW_S3_ENDPOINT_URL
-    
-    mlflow.set_tracking_uri(TRACKING_URI)
+    tracking_uri = os.getenv("TRACKING_URI")
+    mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment(experiment_name)
     return mlflow
 

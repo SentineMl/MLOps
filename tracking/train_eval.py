@@ -18,7 +18,7 @@ def main():
     print("Loading data...")
     # Load portion of the data (e.g. 90%)
     # You can adjust nrows to load the entire dataset and sample 90%
-    data_path = r"C:\Users\DELL\Desktop\vscode\SentinelML\services\event_generator_service\data\transactions.csv"
+    data_path = r"..\data\transactions.csv"
     
     # Load dataset
     df = pd.read_csv(data_path)
@@ -129,4 +129,7 @@ def main():
         # Log the model to MLflow (uploads to your local S3 artifact store)
         print("Uploading model to MLflow...")
         log_model(mlflow, model, "FraudDetectionModel_Champion", artifact_path="fraud_isolation_forest_model")
+
+
+if __name__ == "__main__":
     main()
