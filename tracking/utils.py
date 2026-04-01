@@ -17,10 +17,11 @@ def log_metrics(mlflow, metrics):
     for key, value in metrics.items():
         mlflow.log_metric(key, value)
 
-def log_model(mlflow, model, model_name, artifact_path="model"):
+def log_model(mlflow, model, model_name, artifact_path="model", code_paths=None):
     mlflow.sklearn.log_model(
             sk_model=model,
             artifact_path=artifact_path,
-            registered_model_name=model_name
+            registered_model_name=model_name,
+            code_paths=code_paths
         )
     print("MLflow logging complete!")
