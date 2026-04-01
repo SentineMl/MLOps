@@ -5,3 +5,5 @@ joblib
 python-dotenv
 mlflow
 boto3
+sqlalchemy
+psycopg2-binary
