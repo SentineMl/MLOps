@@ -24,3 +24,5 @@ def log_model(mlflow, model, model_name, artifact_path="model"):
             registered_model_name=model_name
         )
     print("MLflow logging complete!")
+
+

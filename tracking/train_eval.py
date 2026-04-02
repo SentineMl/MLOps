@@ -16,7 +16,7 @@ from feature_eng import process_features
 # Simply setup MLflow here!
 setup_mlflow(EXPERIMENT_NAME)
 
-def load_data_from_db(days_back=30):
+def load_data_from_db(days_back=30,from_csv=True):
     """
     Load transaction data from PostgreSQL for the last N days.
     Uses database credentials from config.
@@ -27,49 +27,53 @@ def load_data_from_db(days_back=30):
     Returns:
         pandas DataFrame with transaction data
     """
-    try:
-        # Create connection string from config
-        connection_string = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-        engine = create_engine(connection_string)
-        
-        # Calculate date range (last 30 days)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=days_back)
-        
-        print(f"Querying data from {start_date.date()} to {end_date.date()}")
-        
-        # Query transactions from the last month
-        # Adjust the query based on your actual table schema
-        query = text(f"""
-            SELECT * 
-            FROM transactions 
-            WHERE created_at >= :start_date 
-            AND created_at <= :end_date
-            ORDER BY created_at DESC
-        """)
-        
-        with engine.connect() as connection:
-            df = pd.read_sql(query, connection, params={
-                'start_date': start_date,
-                'end_date': end_date
-            })
-        
-        print(f"✅ Loaded {len(df)} transactions from database")
-        engine.dispose()
-        
-        return df
-    
-    except Exception as e:
-        print(f"❌ Error loading from database: {e}")
-        print("Falling back to CSV file...")
+    if from_csv:
+        print("Loading data from CSV file...")
         return pd.read_csv(r"..\data\transactions.csv")
+    else:
+        try:
+            # Create connection string from config
+            connection_string = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+            engine = create_engine(connection_string)
+            
+            # Calculate date range (last 30 days)
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=days_back)
+            
+            print(f"Querying data from {start_date.date()} to {end_date.date()}")
+            
+            # Query transactions from the last month
+            # Adjust the query based on your actual table schema
+            query = text(f"""
+                SELECT * 
+                FROM transactions 
+                WHERE created_at >= :start_date 
+                AND created_at <= :end_date
+                ORDER BY created_at DESC
+            """)
+            
+            with engine.connect() as connection:
+                df = pd.read_sql(query, connection, params={
+                    'start_date': start_date,
+                    'end_date': end_date
+                })
+            
+            print(f"✅ Loaded {len(df)} transactions from database")
+            engine.dispose()
+            
+            return df
+        
+        except Exception as e:
+            print(f"❌ Error loading from database: {e}")
+            print("Falling back to CSV file...")
+            return pd.read_csv(r"..\data\transactions.csv")
 
 def main():
     print("Loading data from database...")
     
     # Load data from PostgreSQL (last 30 days)
     # Adjust days_back if you want more/less data
-    df = load_data_from_db(days_back=30)
+    df = load_data_from_db(days_back=30, from_csv=False)
     
     # Sample 90% of the data
     df_sample = df.sample(frac=0.9, random_state=42).reset_index(drop=True)

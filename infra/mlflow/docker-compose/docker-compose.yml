@@ -42,6 +42,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    networks:
+      - mlflow-network
 
   create-bucket:
     image: amazon/aws-cli:2.33.25
@@ -96,6 +98,7 @@ services:
       # Server host/port
       MLFLOW_HOST: ${MLFLOW_HOST}
       MLFLOW_PORT: ${MLFLOW_PORT}
+      MLFLOW_SERVER_ALLOWED_HOSTS: ${MLFLOW_SERVER_ALLOWED_HOSTS}
     command:
       - /bin/bash
       - -c
@@ -106,7 +109,8 @@ services:
           --artifacts-destination "${MLFLOW_ARTIFACTS_DESTINATION}" \
           --serve-artifacts \
           --host "${MLFLOW_HOST}" \
-          --port "${MLFLOW_PORT}"
+          --port "${MLFLOW_PORT}" \
+          --allowed-hosts "${MLFLOW_SERVER_ALLOWED_HOSTS}"
     ports:
       - "${MLFLOW_PORT}:${MLFLOW_PORT}"
     networks:
@@ -128,5 +132,5 @@ networks:
   mlflow-network:
     driver: bridge
   sentinel-mlflow-network:
-    external: true
     name: sentinel-mlflow-network
+    driver: bridge
