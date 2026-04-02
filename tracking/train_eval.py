@@ -180,7 +180,7 @@ def main():
         
         # Log the model to MLflow (uploads to your local S3 artifact store)
         print("Uploading model to MLflow...")
-        log_model(mlflow, model, "FraudDetectionModel_Champion", artifact_path="fraud_isolation_forest_model")
+        log_model(mlflow, model, "FraudDetectionModel_Champion", artifact_path="fraud_isolation_forest_model", code_paths=["feature_eng.py"])
 
 
 if __name__ == "__main__":
