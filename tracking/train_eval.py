@@ -8,6 +8,7 @@ import mlflow
 import mlflow.sklearn
 from datetime import datetime, timedelta
 from sqlalchemy import create_engine, text
+from pathlib import Path
 
 from config import *
 from utils import *
@@ -15,6 +16,20 @@ from feature_eng import process_features
 
 # Simply setup MLflow here!
 setup_mlflow(EXPERIMENT_NAME)
+
+DATA_CSV_PATH = Path(__file__).resolve().parents[1] / "data" / "transactions.csv"
+
+def load_transactions_csv(csv_path=DATA_CSV_PATH):
+    """
+    Load CSV with a parser fallback because some pandas builds on Python 3.13
+    can crash in the C engine for specific files/environments.
+    """
+    try:
+        return pd.read_csv(csv_path, engine="python")
+    except Exception as csv_err:
+        print(f"⚠️ Python CSV engine failed: {csv_err}")
+        print("Trying pandas default CSV parser...")
+        return pd.read_csv(csv_path)
 
 def load_data_from_db(days_back=30,from_csv=True):
     """
@@ -29,7 +44,7 @@ def load_data_from_db(days_back=30,from_csv=True):
     """
     if from_csv:
         print("Loading data from CSV file...")
-        return pd.read_csv(r"..\data\transactions.csv")
+        return load_transactions_csv(DATA_CSV_PATH)
     else:
         try:
             # Create connection string from config
@@ -66,14 +81,14 @@ def load_data_from_db(days_back=30,from_csv=True):
         except Exception as e:
             print(f"❌ Error loading from database: {e}")
             print("Falling back to CSV file...")
-            return pd.read_csv(r"..\data\transactions.csv")
+            return load_transactions_csv(DATA_CSV_PATH)
 
 def main():
     print("Loading data from database...")
     
     # Load data from PostgreSQL (last 30 days)
     # Adjust days_back if you want more/less data
-    df = load_data_from_db(days_back=30, from_csv=False)
+    df = load_data_from_db(days_back=30, from_csv=True)
     
     # Sample 90% of the data
     df_sample = df.sample(frac=0.9, random_state=42).reset_index(drop=True)
