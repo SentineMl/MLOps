@@ -4,6 +4,8 @@ artifacts/
 # Environments
 venv/
 env/
+.venv/
+.vscode/
 .env
 
 # Python caching and compiled files
